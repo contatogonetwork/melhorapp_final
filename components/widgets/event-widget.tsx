@@ -2,8 +2,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, MapPin, Plus, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { useUIStore } from "@/store/useUIStore"
 
 export default function EventWidget() {
+  // Usar o setCurrentPage do store
+  const setCurrentPage = useUIStore((state) => state.setCurrentPage);
+  
   const events = [
     {
       id: 1,
@@ -44,10 +48,17 @@ export default function EventWidget() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Eventos</h1>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Evento
-        </Button>
+        <div className="space-x-2">
+          <Button asChild variant="outline">
+            <a href="/events">
+              Ver Todos
+            </a>
+          </Button>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Evento
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -92,10 +103,19 @@ export default function EventWidget() {
               </div>
 
               <div className="flex justify-between pt-2">
-                <Button variant="outline" size="sm">
-                  Detalhes
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`/events/${event.id}`}>
+                    Detalhes
+                  </a>
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // Usar diretamente o setCurrentPage do useUIStore
+                    setCurrentPage(3); // 3 é o índice da aba Briefing
+                  }}
+                >
                   Briefing
                 </Button>
                 <Button variant="outline" size="sm">

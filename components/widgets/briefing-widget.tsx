@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -8,8 +9,38 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Clock, Save } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import GeneralInfoTab from "@/features/briefing/components/GeneralInfoTab"
+import { useUIStore } from "@/store/useUIStore"
+
+type Event = {
+  id: string;
+  name: string;
+  date: string;
+}
 
 export default function BriefingWidget() {
+  // Usar o ID do evento selecionado do useUIStore
+  const selectedEventId = useUIStore((state) => state.selectedEventId);
+  const setSelectedEventId = useUIStore((state) => state.setSelectedEventId);
+  
+  // Estado local para seleção de evento como fallback
+  const [selectedEvent, setSelectedEvent] = useState<string>("123")
+  
+  // Usar o ID do evento do useUIStore se disponível, caso contrário usar o estado local
+  const effectiveEventId = selectedEventId || selectedEvent;
+  
+  const [events, setEvents] = useState<Event[]>([
+    { id: "123", name: "Festival de Música", date: "18-20 Mai 2025" },
+    { id: "456", name: "Lançamento de Produto", date: "25 Mai 2025" },
+    { id: "789", name: "Conferência Tech", date: "01 Jun 2025" }
+  ])
+  
+  // Isso seria substituído por uma chamada real à API em um ambiente de produção
+  useEffect(() => {
+    // Simulação de carregamento de eventos da API
+    // setEvents([...]) seria chamado aqui em um ambiente real
+  }, [])
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -18,14 +49,22 @@ export default function BriefingWidget() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Label>Evento:</Label>
-            <Select defaultValue="festival">
+            <Select 
+              value={effectiveEventId} 
+              onValueChange={(value) => {
+                setSelectedEvent(value);
+                setSelectedEventId(value);
+              }}
+            >
               <SelectTrigger className="w-[250px]">
                 <SelectValue placeholder="Selecione um evento" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="festival">Festival de Música - 18-20 Mai 2025</SelectItem>
-                <SelectItem value="lancamento">Lançamento de Produto - 25 Mai 2025</SelectItem>
-                <SelectItem value="conferencia">Conferência Tech - 01 Jun 2025</SelectItem>
+                {events.map(event => (
+                  <SelectItem key={event.id} value={event.id}>
+                    {event.name} - {event.date}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -53,7 +92,7 @@ export default function BriefingWidget() {
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
-          <Textarea placeholder="Insira informações gerais sobre o evento..." className="min-h-[400px]" />
+          <GeneralInfoTab eventId={effectiveEventId} />
         </TabsContent>
 
         <TabsContent value="style" className="mt-6">

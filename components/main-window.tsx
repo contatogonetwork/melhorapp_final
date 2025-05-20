@@ -19,6 +19,7 @@ import {
   Truck,
 } from "lucide-react"
 import Image from "next/image"
+import { useUIStore } from "@/store/useUIStore"
 import DashboardWidget from "@/components/widgets/dashboard-widget"
 import EventWidget from "@/components/widgets/event-widget"
 import TeamWidget from "@/components/widgets/team-widget"
@@ -35,8 +36,14 @@ interface MainWindowProps {
 }
 
 export default function MainWindow({ currentUser, onLogout }: MainWindowProps) {
-  const [currentPage, setCurrentPage] = useState(0)
   const [isMaximized, setIsMaximized] = useState(false)
+  
+  // Usar o estado da página atual do useUIStore
+  const currentPage = useUIStore((state) => state.currentPage)
+  const setCurrentPage = useUIStore((state) => state.setCurrentPage)
+  
+  // Não é mais necessário escutar um evento customizado
+  // Agora estamos usando o useUIStore diretamente
 
   const pages = [
     { name: "Dashboard", icon: <Home className="h-5 w-5" />, component: <DashboardWidget /> },
