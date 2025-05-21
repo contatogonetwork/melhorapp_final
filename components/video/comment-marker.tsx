@@ -10,6 +10,7 @@ export interface CommentMarkerProps {
   duration: number
   isResolved: boolean
   commentText: string
+  colorCategory?: string
   onClick: (id: string, time: number) => void
   className?: string
 }
@@ -20,6 +21,7 @@ export default function CommentMarker({
   duration,
   isResolved,
   commentText,
+  colorCategory,
   onClick,
   className,
 }: CommentMarkerProps) {
@@ -28,8 +30,35 @@ export default function CommentMarker({
   // Calculate position as percentage of total duration
   const position = duration > 0 ? (time / duration) * 100 : 0
 
-  // Determine color based on resolved status
-  const markerColor = isResolved ? "bg-success" : "bg-primary"
+  // Determine color based on category and resolved status
+  let markerColor = "bg-primary";
+  
+  // Se resolvido, sempre usar verde
+  if (isResolved) {
+    markerColor = "bg-success";
+  } 
+  // Caso contrário, usar a cor da categoria se disponível
+  else {
+    switch (colorCategory) {
+      case "creative":
+        markerColor = "bg-highlight";
+        break;
+      case "technical": 
+        markerColor = "bg-info";
+        break;
+      case "client":
+        markerColor = "bg-success";
+        break;
+      case "urgent":
+        markerColor = "bg-destructive";
+        break;
+      case "approved":
+        markerColor = "bg-warning";
+        break;
+      default:
+        markerColor = "bg-primary";
+    }
+  }
 
   // Format time for display (MM:SS)
   const formatTime = (timeInSeconds: number) => {

@@ -55,3 +55,9 @@ export function useIsMobile() {
   const { isMobile } = useDevice()
   return isMobile
 }
+
+// Adicionando nova função useMobile para ser completamente compatível
+export function useMobile() {
+  const { isMobile } = useDevice()
+  return isMobile
+}

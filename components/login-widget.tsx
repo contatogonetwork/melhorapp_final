@@ -57,7 +57,7 @@ export default function LoginWidget({ onLoginSuccess }: LoginWidgetProps) {
     <div className="fixed inset-0 flex items-center justify-center bg-background">
       <Card className="w-[400px] border border-border shadow-lg">
         <CardHeader className="space-y-4 flex flex-col items-center">
-          <Image src="/placeholder.svg?key=whufn" alt="GoNetwork AI Logo" width={80} height={80} className="mb-2" />
+          <Image src="/logo_gonetwork.png" alt="GoNetwork AI Logo" width={80} height={80} className="mb-2" />
           <CardTitle className="text-2xl text-primary">GoNetwork AI</CardTitle>
           <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
         </CardHeader>

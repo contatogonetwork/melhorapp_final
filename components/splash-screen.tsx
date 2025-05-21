@@ -24,7 +24,7 @@ export default function SplashScreen() {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-background">
       <div className="flex flex-col items-center justify-center space-y-6 p-8 rounded-xl">
-        <Image src="/placeholder.svg?key=nzgb9" alt="GoNetwork AI Logo" width={120} height={120} className="mb-4" />
+        <Image src="/logo_gonetwork.png" alt="GoNetwork AI Logo" width={120} height={120} className="mb-4" />
         <h1 className="text-3xl font-bold text-primary">GoNetwork AI</h1>
         <div className="w-64 h-2 bg-secondary rounded-full overflow-hidden">
           <div

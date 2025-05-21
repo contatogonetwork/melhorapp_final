@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeneralInfoTab from "@/features/briefing/components/GeneralInfoTab";
 
 export default function BriefingPage() {
+  const params = useParams();
+  const eventId = Array.isArray(params.eventId) ? params.eventId[0] : params.eventId as string;
   const [activeTab, setActiveTab] = useState("general-info");
 
   return (
@@ -14,10 +17,8 @@ export default function BriefingPage() {
         <p className="text-lg text-[#6272A4]">
           Gerencie todas as informações essenciais do evento
         </p>
-      </div>
-
-      <Tabs
-        value={activeTab}
+      </div>      <Tabs
+        defaultValue={activeTab}
         onValueChange={setActiveTab}
         className="w-full"
       >
@@ -54,9 +55,8 @@ export default function BriefingPage() {
           </TabsTrigger>
         </TabsList>
 
-        <div className="mt-6">
-          <TabsContent value="general-info">
-            <GeneralInfoTab />
+        <div className="mt-6">          <TabsContent value="general-info">
+            <GeneralInfoTab eventId={eventId} />
           </TabsContent>
           
           <TabsContent value="technical">

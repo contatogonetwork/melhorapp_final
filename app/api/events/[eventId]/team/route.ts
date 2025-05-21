@@ -22,7 +22,8 @@ export async function GET(
   { params }: { params: { eventId: string } }
 ) {
   try {
-    const { eventId } = params;
+    // Usar await para acessar params.eventId conforme requerido pelo Next.js
+    const eventId = await params.eventId;
     
     // Buscar dados - em um ambiente real, isso viria do banco de dados
     const teamMembers = mockTeamMembers[eventId] || [];

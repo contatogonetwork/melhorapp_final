@@ -4,39 +4,47 @@
 
 @layer base {
   :root {
-    --background: 231 15% 18%;
-    --foreground: 60 30% 96%;
+    /* Base Dracula Theme */
+    --background: 231 15% 18%; /* #282A36 */
+    --foreground: 60 30% 96%; /* #F8F8F2 */
 
-    --card: 231 15% 18%;
-    --card-foreground: 60 30% 96%;
+    --card: 231 15% 18%; /* #282A36 */
+    --card-foreground: 60 30% 96%; /* #F8F8F2 */
 
-    --popover: 231 15% 18%;
-    --popover-foreground: 60 30% 96%;
+    --popover: 231 15% 18%; /* #282A36 */
+    --popover-foreground: 60 30% 96%; /* #F8F8F2 */
 
-    --primary: 265 89% 78%;
-    --primary-foreground: 231 15% 18%;
+    --primary: 265 89% 78%; /* #BD93F9 - Roxo - Dracula Purple */
+    --primary-foreground: 231 15% 18%; /* #282A36 */
 
-    --secondary: 232 14% 31%;
-    --secondary-foreground: 60 30% 96%;
+    --secondary: 232 14% 31%; /* #44475A - Dracula Current Line/Selection */
+    --secondary-foreground: 60 30% 96%; /* #F8F8F2 */
 
-    --muted: 225 27% 51%;
-    --muted-foreground: 60 30% 96%;
+    --muted: 225 27% 51%; /* #6272A4 - Dracula Comment */
+    --muted-foreground: 60 30% 96%; /* #F8F8F2 */
 
-    --accent: 225 27% 51%;
-    --accent-foreground: 60 30% 96%;
+    --accent: 191 97% 77%; /* #8BE9FD - Dracula Cyan */
+    --accent-foreground: 231 15% 18%; /* #282A36 */
 
-    --destructive: 0 100% 67%;
-    --destructive-foreground: 60 30% 96%;
+    --destructive: 0 100% 67%; /* #FF5555 - Dracula Red */
+    --destructive-foreground: 60 30% 96%; /* #F8F8F2 */
 
-    --success: 135 94% 65%;
-    --success-foreground: 231 15% 18%;
+    --success: 135 94% 65%; /* #50FA7B - Dracula Green */
+    --success-foreground: 231 15% 18%; /* #282A36 */
 
-    --warning: 31 100% 71%;
-    --warning-foreground: 231 15% 18%;
+    --warning: 65 92% 76%; /* #F1FA8C - Dracula Yellow */
+    --warning-foreground: 231 15% 18%; /* #282A36 */
 
-    --border: 232 14% 31%;
-    --input: 232 14% 31%;
-    --ring: 265 89% 78%;
+    /* New colors for different information types */
+    --info: 191 97% 77%; /* #8BE9FD - Cyan */
+    --info-foreground: 231 15% 18%;
+
+    --highlight: 326 100% 74%; /* #FF79C6 - Dracula Pink */
+    --highlight-foreground: 231 15% 18%;
+    
+    --border: 232 14% 31%; /* #44475A */
+    --input: 232 14% 31%; /* #44475A */
+    --ring: 265 89% 78%; /* #BD93F9 */
 
     --radius: 0.5rem;
   }

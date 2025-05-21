@@ -33,11 +33,11 @@ export default function SettingsWidget() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo</Label>
-                  <Input id="name" value="Administrador" />
+                  <Input id="name" defaultValue="Administrador" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value="admin@gonetwork.ai" />
+                  <Input id="email" type="email" defaultValue="admin@gonetwork.ai" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefone</Label>
@@ -45,7 +45,7 @@ export default function SettingsWidget() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Função</Label>
-                  <Input id="role" value="Administrador" disabled />
+                  <Input id="role" defaultValue="Administrador" disabled />
                 </div>
               </div>
 

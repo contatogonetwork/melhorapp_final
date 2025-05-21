@@ -72,7 +72,7 @@ export default function MainWindow({ currentUser, onLogout }: MainWindowProps) {
       {/* Window controls */}
       <div className="flex items-center justify-between p-2 bg-background border-b border-border">
         <div className="flex items-center gap-2">
-          <Image src="/placeholder.svg?key=37iqi" alt="GoNetwork AI Logo" width={24} height={24} />
+          <Image src="/logo_gonetwork.png" alt="GoNetwork AI Logo" width={24} height={24} />
           <span className="text-primary font-bold">GoNetwork AI</span>
         </div>
         <div className="flex items-center gap-2">

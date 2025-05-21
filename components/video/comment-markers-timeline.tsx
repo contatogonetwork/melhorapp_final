@@ -10,6 +10,7 @@ export interface Comment {
   isResolved: boolean
   author: string
   createdAt: string
+  colorCategory?: string
 }
 
 interface CommentMarkersTimelineProps {
@@ -37,6 +38,7 @@ export default function CommentMarkersTimeline({
           duration={duration}
           isResolved={comment.isResolved}
           commentText={comment.text}
+          colorCategory={comment.colorCategory}
           onClick={onMarkerClick}
         />
       ))}

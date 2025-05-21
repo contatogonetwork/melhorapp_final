@@ -268,13 +268,13 @@ export default function BriefingWidget() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="action-name-2">Ação / Ativação:</Label>
-                        <Input id="action-name-2" placeholder="Nome da ação/ativação" value="Stand promocional" />
+                        <Input id="action-name-2" placeholder="Nome da ação/ativação" defaultValue="Stand promocional" />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="action-time-2">Horário de captação:</Label>
                         <div className="flex items-center gap-2">
-                          <Input id="action-time-2" type="time" value="14:30" />
+                          <Input id="action-time-2" type="time" defaultValue="14:30" />
                           <div className="flex items-center gap-2">
                             <Checkbox id="free-time-2" />
                             <Label htmlFor="free-time-2">Horário Livre</Label>
@@ -315,7 +315,7 @@ export default function BriefingWidget() {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <Label>Palco:</Label>
-                  <Input className="w-[250px]" value="Palco Principal" />
+                  <Input className="w-[250px]" defaultValue="Palco Principal" />
                 </div>
 
                 <Button variant="outline" size="icon">
@@ -368,12 +368,12 @@ export default function BriefingWidget() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="artist">Artista:</Label>
-                        <Input id="artist" placeholder="Nome do artista/atração" value="Banda XYZ" />
+                        <Input id="artist" placeholder="Nome do artista/atração" defaultValue="Banda XYZ" />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="showtime">Horário:</Label>
-                        <Input id="showtime" type="time" value="20:30" />
+                        <Input id="showtime" type="time" defaultValue="20:30" />
                       </div>
 
                       <div className="col-span-2 space-y-2">
@@ -411,12 +411,12 @@ export default function BriefingWidget() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="artist-2">Artista:</Label>
-                        <Input id="artist-2" placeholder="Nome do artista/atração" value="DJ ABC" />
+                        <Input id="artist-2" placeholder="Nome do artista/atração" defaultValue="DJ ABC" />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="showtime-2">Horário:</Label>
-                        <Input id="showtime-2" type="time" value="22:00" />
+                        <Input id="showtime-2" type="time" defaultValue="22:00" />
                       </div>
 
                       <div className="col-span-2 space-y-2">
@@ -474,13 +474,13 @@ export default function BriefingWidget() {
                         <Input
                           id="delivery-title"
                           placeholder="Título/descrição da entrega"
-                          value="Stories - Abertura"
+                          defaultValue="Stories - Abertura"
                         />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="delivery-time">Horário de entrega:</Label>
-                        <Input id="delivery-time" type="time" value="12:30" />
+                        <Input id="delivery-time" type="time" defaultValue="12:30" />
                       </div>
 
                       <div className="space-y-2">
@@ -562,7 +562,7 @@ export default function BriefingWidget() {
 
                       <div className="space-y-2">
                         <Label htmlFor="delivery-time-2">Horário de entrega:</Label>
-                        <Input id="delivery-time-2" type="time" value="15:00" />
+                        <Input id="delivery-time-2" type="time" defaultValue="15:00" />
                       </div>
                     </div>
                   </CardContent>
@@ -574,7 +574,7 @@ export default function BriefingWidget() {
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="teaser-time">Horário do teaser final:</Label>
-                  <Input id="teaser-time" type="time" value="21:00" />
+                  <Input id="teaser-time" type="time" defaultValue="21:00" />
                 </div>
               </div>
             </div>
@@ -586,7 +586,7 @@ export default function BriefingWidget() {
                 <div className="space-y-2">
                   <Label htmlFor="deadline">Prazo de entrega:</Label>
                   <div className="flex items-center gap-2">
-                    <Input id="deadline" type="number" min="1" max="30" value="7" className="w-20" />
+                    <Input id="deadline" type="number" min="1" max="30" defaultValue="7" className="w-20" />
                     <Select defaultValue="dias">
                       <SelectTrigger className="w-[100px]">
                         <SelectValue placeholder="Unidade" />

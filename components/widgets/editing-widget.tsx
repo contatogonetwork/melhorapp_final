@@ -10,7 +10,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { FileText, Plus, Users } from "lucide-react"
+import { 
+  FileText, 
+  Plus, 
+  Users, 
+  Share, 
+  Upload, 
+  Mic, 
+  Hash, 
+  Image, 
+  Download, 
+  Facebook, 
+  Instagram, 
+  Youtube, 
+  Twitter, 
+  MessageSquare,
+  Trash
+} from "lucide-react"
 import VideoPlayer from "@/components/video/video-player"
 import CommentMarkersTimeline, { type Comment } from "@/components/video/comment-markers-timeline"
 import CommentItem from "@/components/video/comment-item"
@@ -23,52 +39,98 @@ import { v4 as uuidv4 } from "uuid"
 import type { Annotation } from "@/components/video/annotation-canvas"
 import { exportToCSV, exportToPDF, captureVideoScreenshots } from "@/lib/export-utils"
 import { CollaborationProvider, useCollaboration } from "@/contexts/collaboration-context"
+import { Badge } from "@/components/ui/badge" 
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useToast } from "@/hooks/use-toast"
+import { useMobile } from "@/hooks/use-mobile"
 
-// Exemplo de dados de vídeo
+// Tipos para a versão melhorada
+interface Asset {
+  id: string
+  name: string
+  type: "image" | "video" | "audio" | "document"
+  url: string
+  thumbnailUrl?: string
+  uploadedBy: string
+  uploadedAt: string
+}
+
+interface CommentColor {
+  id: string
+  name: string
+  color: string
+  description: string
+}
+
+interface VideoVersion {
+  id: string
+  versionNumber: number
+  title: string
+  src: string
+  createdAt: string
+  createdBy: string
+  comments: Comment[]
+}
+
+// Dados de vídeo para projetos reais
 const SAMPLE_VIDEOS = [
   {
     id: "video1",
-    title: "Festival de Música - Teaser",
+    title: "GoNetwork Summit 2025 - Teaser",
     src: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   },
   {
     id: "video2",
-    title: "Lançamento de Produto - Apresentação",
+    title: "Lançamento GoNetflix Plus - Apresentação",
     src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
   },
   {
     id: "video3",
-    title: "Conferência Tech - Highlights",
+    title: "GoNetwork DevCon 2025 - Highlights",
     src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   },
 ]
 
-// Exemplo de comentários iniciais
+// Comentários iniciais com nomes definidos
 const INITIAL_COMMENTS: Comment[] = [
   {
     id: "comment1",
     time: 15.5,
-    text: "Podemos ajustar o brilho nesta cena? Está um pouco escuro.",
+    text: "Podemos ajustar o brilho nesta cena? Está um pouco escuro para a marca.",
     isResolved: false,
-    author: "Maria Souza",
+    author: "Regina Duarte",
     createdAt: new Date(Date.now() - 7200000).toISOString(), // 2 horas atrás
+    colorCategory: "creative"
   },
   {
     id: "comment2",
     time: 45.2,
-    text: "Cortar esta parte e ir direto para a próxima fala.",
+    text: "Cortar esta parte e ir direto para a apresentação do GoNetwork Plus.",
     isResolved: true,
-    author: "João Silva",
+    author: "Carlos Drummond",
     createdAt: new Date(Date.now() - 10800000).toISOString(), // 3 horas atrás
+    colorCategory: "technical"
   },
   {
     id: "comment3",
     time: 92.7,
-    text: "Adicionar legenda nesta parte com o nome do palestrante.",
+    text: "Adicionar legenda com o nome do CEO Pedro Cardoso nesta parte.",
     isResolved: false,
-    author: "Ana Costa",
+    author: "Marina Lima",
     createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hora atrás
+    colorCategory: "client"
   },
+]
+
+// Cores para categorização de comentários (Paleta Dracula)
+const COMMENT_COLORS: CommentColor[] = [
+  { id: "general", name: "Geral", color: "#BD93F9", description: "Comentários gerais" }, // Roxo
+  { id: "creative", name: "Criativo", color: "#FF79C6", description: "Sugestões criativas" }, // Rosa
+  { id: "technical", name: "Técnico", color: "#8BE9FD", description: "Questões técnicas" }, // Ciano
+  { id: "client", name: "Cliente", color: "#50FA7B", description: "Feedback do cliente" }, // Verde
+  { id: "urgent", name: "Urgente", color: "#FF5555", description: "Questões urgentes" }, // Vermelho
+  { id: "approved", name: "Aprovado", color: "#F1FA8C", description: "Conteúdo aprovado" }, // Amarelo
 ]
 
 // Exemplo de anotações iniciais
@@ -112,23 +174,104 @@ const INITIAL_ANNOTATIONS: Annotation[] = [
   },
 ]
 
+// Exemplo de library de assets
+const SAMPLE_ASSETS: Asset[] = [
+  {
+    id: "asset1",
+    name: "Logo GoNetwork (Transparente)",
+    type: "image",
+    url: "/logo_gonetwork.png",
+    thumbnailUrl: "/logo_gonetwork.png",
+    uploadedBy: "Pedro Cardoso",
+    uploadedAt: new Date(Date.now() - 604800000).toISOString() // 7 dias atrás
+  },
+  {
+    id: "asset2",
+    name: "Música tema - GoNetwork",
+    type: "audio",
+    url: "https://example.com/audio.mp3",
+    uploadedBy: "Daniel Ribeiro",
+    uploadedAt: new Date(Date.now() - 259200000).toISOString() // 3 dias atrás
+  },
+  {
+    id: "asset3",
+    name: "Manual de marca GoNetwork",
+    type: "document",
+    url: "https://example.com/document.pdf",
+    thumbnailUrl: "/placeholder.jpg",
+    uploadedBy: "Regina Duarte",
+    uploadedAt: new Date(Date.now() - 86400000).toISOString() // 1 dia atrás
+  }
+]
+
+// Versões de vídeo
+const SAMPLE_VERSIONS: VideoVersion[] = [
+  {
+    id: "version1",
+    versionNumber: 1,
+    title: "GoNetwork Summit 2025 - Primeira versão",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    createdAt: new Date(Date.now() - 604800000).toISOString(),
+    createdBy: "Editor Principal",
+    comments: [],
+  },
+  {
+    id: "version2",
+    versionNumber: 2,
+    title: "GoNetwork Summit 2025 - Revisão 1",
+    src: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    createdAt: new Date(Date.now() - 259200000).toISOString(),
+    createdBy: "Editor Principal",
+    comments: [],
+  }
+]
+
 function EditingWidgetContent() {
+  // Estado para vídeos e versões
   const [currentVideo, setCurrentVideo] = useState(SAMPLE_VIDEOS[0])
+  const [versions, setVersions] = useState<VideoVersion[]>(SAMPLE_VERSIONS)
+  const [currentVersionId, setCurrentVersionId] = useState<string>("version2")
+  
+  // Estado para comentários e anotações
   const [comments, setComments] = useState<Comment[]>(INITIAL_COMMENTS)
   const [annotations, setAnnotations] = useState<Annotation[]>(INITIAL_ANNOTATIONS)
   const [filteredComments, setFilteredComments] = useState<Comment[]>(INITIAL_COMMENTS)
   const [showResolved, setShowResolved] = useState(true)
   const [showPending, setShowPending] = useState(true)
+  const [commentColor, setCommentColor] = useState<string>("general")
+  const [filterByColor, setFilterByColor] = useState<string | null>(null)
+
+  // Estado para o player e interatividade
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [newCommentText, setNewCommentText] = useState("")
+  const [isAdding, setIsAdding] = useState(false)
   const [activeTab, setActiveTab] = useState("comments")
   const [showCollaboration, setShowCollaboration] = useState(false)
+  
+  // Estado para assets
+  const [assets, setAssets] = useState<Asset[]>(SAMPLE_ASSETS)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
+  
+  // Estado para legendas automáticas
+  const [captions, setCaptions] = useState<string[]>([])
+  const [isGeneratingCaptions, setIsGeneratingCaptions] = useState(false)
+  
+  // Estado para compartilhamento
+  const [shareUrl, setShareUrl] = useState<string>("")
+  
+  // Toast para notificações
+  const { toast } = useToast()
+  
+  // Detecção de dispositivo móvel
+  const isMobile = useMobile()
 
   // Refs para o vídeo e canvas
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const videoPlayerRef = useRef<HTMLDivElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Estado para os modais de exportação
   const [isExportModalOpen, setIsExportModalOpen] = useState(false)
@@ -172,9 +315,13 @@ function EditingWidgetContent() {
     if (!showPending) {
       filtered = filtered.filter((comment) => comment.isResolved)
     }
+    
+    if (filterByColor) {
+      filtered = filtered.filter((comment) => comment.colorCategory === filterByColor)
+    }
 
     setFilteredComments(filtered)
-  }, [comments, showResolved, showPending])
+  }, [comments, showResolved, showPending, filterByColor])
 
   // Manipuladores de eventos para comentários
   const handleAddComment = () => {
@@ -187,6 +334,7 @@ function EditingWidgetContent() {
       isResolved: false,
       author: "Você", // Em um app real, seria o usuário atual
       createdAt: new Date().toISOString(),
+      colorCategory: commentColor
     }
 
     if (isJoined) {
@@ -194,8 +342,15 @@ function EditingWidgetContent() {
     } else {
       setComments((prev) => [...prev, newComment])
     }
+    
+    // Notificar usuário sobre o comentário adicionado
+    toast({
+      title: "Comentário adicionado",
+      description: "Seu comentário foi adicionado com sucesso."
+    })
 
     setNewCommentText("")
+    setIsAdding(false)
   }
 
   const handleResolveComment = (id: string) => {
@@ -421,6 +576,9 @@ function EditingWidgetContent() {
               <TabsTrigger value="deliveries" className="flex-1">
                 Entregas
               </TabsTrigger>
+              <TabsTrigger value="edits" className="flex-1">
+                Edições
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="comments" className="space-y-4 mt-4">
@@ -467,6 +625,41 @@ function EditingWidgetContent() {
                   <Button variant="outline" size="sm" onClick={handleOpenExportModal}>
                     <FileText className="h-4 w-4 mr-2" />
                     Exportar
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Label>Cor:</Label>
+                  <Select
+                    value={commentColor}
+                    onValueChange={setCommentColor}
+                    className="w-[150px]"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma cor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMENT_COLORS.map((color) => (
+                        <SelectItem key={color.id} value={color.id}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: color.color }}
+                            />
+                            {color.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilterByColor(null)}
+                  >
+                    <Hash className="h-4 w-4 mr-2" />
+                    Limpar filtro
                   </Button>
                 </div>
 
@@ -583,6 +776,69 @@ function EditingWidgetContent() {
                 </Card>
 
                 <Button className="w-full">Nova Entrega</Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="edits" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold">Edições de Vídeo</h2>
+                  <Button onClick={() => setIsExportModalOpen(true)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Enviar Edição
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="font-medium">Versão 1.2</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Ajustes de cor e cortes solicitados pelo cliente.
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4 mr-2" />
+                          Baixar
+                        </Button>
+                        <Button variant="destructive" size="sm">
+                          <Trash className="h-4 w-4 mr-2" />
+                          Excluir
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="font-medium">Versão 1.1</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Primeira revisão com ajustes de áudio.
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4 mr-2" />
+                          Baixar
+                        </Button>
+                        <Button variant="destructive" size="sm">
+                          <Trash className="h-4 w-4 mr-2" />
+                          Excluir
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <Button className="flex-1">
+                    <Share className="h-4 w-4 mr-2" />
+                    Compartilhar link
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Solicitar feedback
+                  </Button>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
