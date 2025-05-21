@@ -90,11 +90,12 @@ export default function EventsPage() {
             className="bg-[#21222C] text-[#F8F8F2] border border-[#44475A]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Button className="bg-[#50FA7B] hover:bg-[#43D669] text-[#282A36]">
-          Novo Evento
-        </Button>
+          />        </div>
+        <Link href="/events/new">
+          <Button className="bg-[#50FA7B] hover:bg-[#43D669] text-[#282A36]">
+            Novo Evento
+          </Button>
+        </Link>
       </div>
       
       {filteredEvents.length === 0 ? (
