@@ -6,6 +6,14 @@ export interface Phase {
   completed: boolean;
 }
 
+// Task interface - Para sistema de workflow
+export type TaskStatus = 'pending' | 'completed';
+export interface Task {
+  id: string;
+  title: string;
+  status: TaskStatus;
+}
+
 // VideoVersion interface - Para Sistema de Versões
 export interface VideoVersion {
   id: string;
@@ -16,10 +24,13 @@ export interface VideoVersion {
 }
 
 // VideoDeliverable interface - Para Sistema de Versões
+export type DeliverableStatus = 'editing' | 'ready_for_review' | 'changes_requested' | 'approved';
 export interface VideoDeliverable {
   id: string;
   title: string;
   versions: VideoVersion[];
+  status?: DeliverableStatus;
+  comments?: Comment[];
 }
 
 export interface Project {
@@ -41,6 +52,7 @@ export interface Project {
   finalDueDate?: Date;
   timeline: Phase[];
   videos: VideoDeliverable[];
+  tasks?: Task[];  // Adicionado para o sistema de tarefas
 }
 
 export interface Comment {

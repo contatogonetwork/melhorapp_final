@@ -1,6 +1,11 @@
+// store/useProjectsStoreExtended.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Project, Comment, Annotation, Asset, VideoVersion, VideoDeliverable, Task, DeliverableStatus } from '@/types/project';
+import type { 
+  Project, Comment, Annotation, Asset, 
+  VideoVersion, VideoDeliverable, Task, 
+  TaskStatus, DeliverableStatus, Phase 
+} from '@/types/project';
 import { useUIStore } from '@/store/useUIStore';
 
 interface ProjectsState {
@@ -12,6 +17,15 @@ interface ProjectsState {
   isLoading: boolean;
 }
 
+// Tarefas padrão para novos projetos
+const defaultTaskTitles: string[] = [
+  'Planejamento do projeto',
+  'Gravação/Produção do vídeo',
+  'Edição do vídeo',
+  'Revisão do cliente',
+  'Aprovação final'
+];
+
 interface ProjectsStore extends ProjectsState {
   setProjects: (projects: Project[]) => void;
   setCurrentProject: (project: Project | null) => void;
@@ -20,13 +34,6 @@ interface ProjectsStore extends ProjectsState {
   deleteProject: (id: string) => void;
   createProject: (data: Omit<Project, "id">) => void;
   addVideoVersion: (file: File, deliverableId?: string) => Promise<void>;
-  
-  // Funções do workflow
-  markVideoReady: (projectId: string, deliverableId: string) => void;
-  approveDeliverable: (projectId: string, deliverableId: string) => void;
-  requestChanges: (projectId: string, deliverableId: string, commentText?: string) => void;
-  markCommentResolved: (projectId: string, deliverableId: string, commentId: string) => void;
-  toggleTaskCompletion: (projectId: string, taskId: string) => void;
   
   // Comentários
   addComment: (comment: Comment) => void;
@@ -43,11 +50,18 @@ interface ProjectsStore extends ProjectsState {
   addAsset: (asset: Asset) => void;
   updateAsset: (id: string, assetData: Partial<Asset>) => void;
   deleteAsset: (id: string) => void;
+  
+  // Funções do workflow
+  markVideoReady: (projectId: string, deliverableId: string) => void;
+  approveDeliverable: (projectId: string, deliverableId: string) => void;
+  requestChanges: (projectId: string, deliverableId: string, commentText?: string) => void;
+  markCommentResolved: (projectId: string, deliverableId: string, commentId: string) => void;
+  toggleTaskCompletion: (projectId: string, taskId: string) => void;
 }
 
 export const useProjectsStore = create<ProjectsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       projects: [],
       currentProject: null,
       comments: [],
@@ -64,15 +78,30 @@ export const useProjectsStore = create<ProjectsStore>()(
       // Nova implementação do createProject
       createProject: (data) => set((state) => {
         const newId = Date.now().toString();  // gera um ID simples (timestamp)
+        
+        // Inicializa tarefas padrão
+        const initialTasks: Task[] = defaultTaskTitles.map((title, index) => ({
+          id: `task-${newId}-${index}`,
+          title,
+          status: 'pending' as TaskStatus
+        }));
+        
         // Se nenhum vídeo foi fornecido, inicializa com um deliverable padrão
         const initialVideos: VideoDeliverable[] = data.videos && data.videos.length > 0
           ? data.videos
-          : [{ id: `${newId}-vid1`, title: "Vídeo 1", versions: [] }];
+          : [{
+              id: `${newId}-vid1`, 
+              title: "Vídeo 1", 
+              versions: [],
+              status: 'editing' as DeliverableStatus,
+              comments: []
+            }];
         
         const newProject: Project = {
           id: newId,
           ...data,
           videos: initialVideos,
+          tasks: initialTasks,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -99,17 +128,17 @@ export const useProjectsStore = create<ProjectsStore>()(
       
       // Nova implementação de addVideoVersion
       addVideoVersion: async (file, deliverableId) => set((state) => {
-        if (!state.currentProject) return {};
+        if (!state.currentProject) return state;
         
         // Identifica o deliverable alvo (usa o primeiro vídeo caso não seja especificado)
         const deliverables = state.currentProject.videos;
-        if (!deliverables.length) return {};
+        if (!deliverables.length) return state;
         
         const targetDeliverable = deliverableId 
           ? deliverables.find(d => d.id === deliverableId)
           : deliverables[0];
         
-        if (!targetDeliverable) return {};
+        if (!targetDeliverable) return state;
         
         // Cria uma URL temporária para o arquivo (simulação de upload)
         const fileUrl = URL.createObjectURL(file);
@@ -139,7 +168,7 @@ export const useProjectsStore = create<ProjectsStore>()(
         
         return {
           currentProject: updatedProject,
-          projects: state.projects.map(p => 
+          projects: state.projects.map(p =>
             p.id === updatedProject.id ? updatedProject : p
           )
         };
@@ -149,14 +178,17 @@ export const useProjectsStore = create<ProjectsStore>()(
       addComment: (comment) => set((state) => ({
         comments: [...state.comments, comment]
       })),
+      
       updateComment: (id, commentData) => set((state) => ({
-        comments: state.comments.map(comment => 
+        comments: state.comments.map(comment =>
           comment.id === id ? { ...comment, ...commentData } : comment
         )
       })),
+      
       deleteComment: (id) => set((state) => ({
         comments: state.comments.filter(comment => comment.id !== id)
       })),
+      
       resolveComment: (id, resolved) => set((state) => ({
         comments: state.comments.map(comment =>
           comment.id === id ? { ...comment, resolved } : comment
@@ -167,23 +199,28 @@ export const useProjectsStore = create<ProjectsStore>()(
       addAnnotation: (annotation) => set((state) => ({
         annotations: [...state.annotations, annotation]
       })),
+      
       updateAnnotation: (id, annotationData) => set((state) => ({
         annotations: state.annotations.map(annotation => 
           annotation.id === id ? { ...annotation, ...annotationData } : annotation
         )
       })),
+      
       deleteAnnotation: (id) => set((state) => ({
         annotations: state.annotations.filter(annotation => annotation.id !== id)
       })),
-        // Gerenciamento de Assets
+      
+      // Gerenciamento de Assets
       addAsset: (asset) => set((state) => ({
         assets: [...state.assets, asset]
       })),
+      
       updateAsset: (id, assetData) => set((state) => ({
         assets: state.assets.map(asset => 
           asset.id === id ? { ...asset, ...assetData } : asset
         )
       })),
+      
       deleteAsset: (id) => set((state) => ({
         assets: state.assets.filter(asset => asset.id !== id)
       })),
@@ -194,7 +231,8 @@ export const useProjectsStore = create<ProjectsStore>()(
       markVideoReady: (projectId, deliverableId) => set((state) => {
         const projects = state.projects.map(project => {
           if (project.id !== projectId) return project;
-            const updatedVideos = project.videos.map(video => {
+          
+          const updatedVideos = project.videos.map(video => {
             if (video.id !== deliverableId) return video;
             return { ...video, status: 'ready_for_review' as DeliverableStatus };
           });
@@ -209,7 +247,7 @@ export const useProjectsStore = create<ProjectsStore>()(
             updatedTasks.push({
               id: Date.now().toString(),
               title: 'Revisão do vídeo pelo cliente',
-              status: 'pending'
+              status: 'pending' as TaskStatus
             });
           }
           
@@ -219,9 +257,8 @@ export const useProjectsStore = create<ProjectsStore>()(
             tasks: updatedTasks
           };
         });
-        
-        // Notificar
-        useUIStore.getState().addNotification('Vídeo marcado como pronto para revisão');
+          // Notificar
+        useUIStore.getState().addNotification('Vídeo marcado como pronto para revisão', 'info');
         
         return { projects };
       }),
@@ -233,13 +270,13 @@ export const useProjectsStore = create<ProjectsStore>()(
           
           const updatedVideos = project.videos.map(video => {
             if (video.id !== deliverableId) return video;
-            return { ...video, status: 'approved' };
+            return { ...video, status: 'approved' as DeliverableStatus };
           });
           
           // Marcar tarefas de revisão como concluídas
           const updatedTasks = (project.tasks || []).map(task => {
             if (task.title.includes('Revisão') && task.status === 'pending') {
-              return { ...task, status: 'completed' };
+              return { ...task, status: 'completed' as TaskStatus };
             }
             return task;
           });
@@ -250,9 +287,8 @@ export const useProjectsStore = create<ProjectsStore>()(
             tasks: updatedTasks
           };
         });
-        
-        // Notificar
-        useUIStore.getState().addNotification('Entrega aprovada com sucesso!');
+          // Notificar
+        useUIStore.getState().addNotification('Entrega aprovada com sucesso!', 'success');
         
         return { projects };
       }),
@@ -281,7 +317,7 @@ export const useProjectsStore = create<ProjectsStore>()(
             
             return { 
               ...video, 
-              status: 'changes_requested',
+              status: 'changes_requested' as DeliverableStatus,
               comments: updatedComments
             };
           });
@@ -291,7 +327,7 @@ export const useProjectsStore = create<ProjectsStore>()(
           updatedTasks.push({
             id: Date.now().toString(),
             title: 'Implementar alterações solicitadas',
-            status: 'pending'
+            status: 'pending' as TaskStatus
           });
           
           return { 
@@ -300,9 +336,8 @@ export const useProjectsStore = create<ProjectsStore>()(
             tasks: updatedTasks
           };
         });
-        
-        // Notificar
-        useUIStore.getState().addNotification('Solicitação de alterações registrada');
+          // Notificar
+        useUIStore.getState().addNotification('Solicitação de alterações registrada', 'warning');
         
         return { projects };
       }),
@@ -330,21 +365,32 @@ export const useProjectsStore = create<ProjectsStore>()(
         
         return { projects };
       }),
-      
-      // Alternar o status de uma tarefa
+        // Alternar o status de uma tarefa
       toggleTaskCompletion: (projectId, taskId) => set((state) => {
         const projects = state.projects.map(project => {
           if (project.id !== projectId) return project;
           
           const updatedTasks = (project.tasks || []).map(task => {
             if (task.id === taskId) {
-              return { 
-                ...task, 
-                status: task.status === 'pending' ? 'completed' : 'pending' 
-              };
+              const newStatus: TaskStatus = task.status === 'pending' ? 'completed' : 'pending';
+              return { ...task, status: newStatus };
             }
             return task;
           });
+          
+          // Verificar se todas as tarefas foram concluídas
+          const allTasksCompleted = updatedTasks.length > 0 && 
+            updatedTasks.every(task => task.status === 'completed');
+          
+          // Se todas as tarefas foram concluídas, mostrar notificação
+          if (allTasksCompleted) {
+            setTimeout(() => {
+              useUIStore.getState().addNotification(
+                'Todas as tarefas do projeto foram concluídas!', 
+                'success'
+              );
+            }, 500);
+          }
           
           return { ...project, tasks: updatedTasks };
         });

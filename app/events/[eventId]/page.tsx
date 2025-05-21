@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useProjectsStore } from "@/store/useProjectsStore";
+import { useProjectsStore } from "@/store/useProjectsStoreExtended"; // Usando o store estendido
 import Timeline from "@/components/widgets/Timeline";
+import { ProjectWorkflowPanel } from "@/components/project/ProjectWorkflowPanel";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -92,11 +94,13 @@ export default function EventDetailPage() {
       </div>
     );
   }
-
   // Obter o deliverable selecionado
   const selectedDeliverable = selectedDeliverableId 
     ? currentProject.videos.find(v => v.id === selectedDeliverableId) 
     : null;
+    
+  // Obter comentários do deliverable selecionado
+  const deliverableComments = selectedDeliverable?.comments || [];
 
   // Obter as versões selecionadas para comparação
   const comparisonVersions = selectedDeliverable
@@ -106,18 +110,57 @@ export default function EventDetailPage() {
     : [];
 
   return (
-    <div className="container py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">{currentProject.title}</h1>
-        {currentProject.description && (
-          <p className="text-muted-foreground mt-2">{currentProject.description}</p>
-        )}
+    <div className="container py-8">      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">{currentProject.title}</h1>
+            {currentProject.description && (
+              <p className="text-muted-foreground mt-2">{currentProject.description}</p>
+            )}
+          </div>
+          
+          {/* Resumo do status */}
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-medium">Status atual:</span>
+              <span className={cn(
+                "px-2 py-1 rounded-full text-xs font-medium",
+                currentProject.status === 'draft' && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+                currentProject.status === 'review' && "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+                currentProject.status === 'approved' && "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+                currentProject.status === 'completed' && "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+              )}>
+                {currentProject.status === 'draft' ? 'Rascunho' : 
+                 currentProject.status === 'review' ? 'Em revisão' :
+                 currentProject.status === 'approved' ? 'Aprovado' : 'Concluído'}
+              </span>
+            </div>
+            
+            {/* Progresso de tarefas */}
+            {currentProject.tasks && currentProject.tasks.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  Progresso: {Math.round((currentProject.tasks.filter(t => t.status === 'completed').length / currentProject.tasks.length) * 100)}%
+                </span>
+                <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary" 
+                    style={{ 
+                      width: `${Math.round((currentProject.tasks.filter(t => t.status === 'completed').length / currentProject.tasks.length) * 100)}%` 
+                    }} 
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="versions">Versões de Vídeo</TabsTrigger>
+          <TabsTrigger value="workflow">Workflow</TabsTrigger>
           <TabsTrigger value="details">Detalhes</TabsTrigger>
         </TabsList>
 
@@ -286,6 +329,14 @@ export default function EventDetailPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Nova aba para workflow */}
+        <TabsContent value="workflow">
+          <ProjectWorkflowPanel 
+            projectId={currentProject.id}
+            deliverableId={selectedDeliverableId || undefined}
+          />
         </TabsContent>
 
         <TabsContent value="details">
