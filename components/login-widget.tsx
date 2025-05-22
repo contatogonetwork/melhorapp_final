@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useMobile } from "@/hooks/use-mobile"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +25,7 @@ export default function LoginWidget({ onLoginSuccess }: LoginWidgetProps) {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const login = useAuthStore((state) => state.login)
+  const isMobile = useMobile()
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -54,16 +56,26 @@ export default function LoginWidget({ onLoginSuccess }: LoginWidgetProps) {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background">
-      <Card className="w-[400px] border border-border shadow-lg">
-        <CardHeader className="space-y-4 flex flex-col items-center">
-          <Image src="/logo_gonetwork.png" alt="GoNetwork AI Logo" width={80} height={80} className="mb-2" />
-          <CardTitle className="text-2xl text-primary">GoNetwork AI</CardTitle>
-          <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
+    <div className="fixed inset-0 flex items-center justify-center bg-background p-4">
+      <Card className={`${isMobile ? 'w-full' : 'w-[400px]'} border border-border shadow-lg`}>
+        <CardHeader className={`${isMobile ? 'p-4' : 'p-6'} space-y-3 md:space-y-4 flex flex-col items-center`}>
+          <Image 
+            src="/logo_gonetwork.png" 
+            alt="GoNetwork AI Logo" 
+            width={isMobile ? 60 : 80} 
+            height={isMobile ? 60 : 80} 
+            className="mb-1 md:mb-2" 
+          />
+          <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'} text-primary`}>
+            GoNetwork AI
+          </CardTitle>
+          <CardDescription className={isMobile ? 'text-sm text-center' : ''}>
+            Entre com suas credenciais para acessar o sistema
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={isMobile ? 'p-4' : ''}>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 md:space-y-4">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -110,7 +122,7 @@ export default function LoginWidget({ onLoginSuccess }: LoginWidgetProps) {
                 {isLoading ? "Entrando..." : "Entrar"}
               </Button>
               
-              <div className="text-center text-sm text-muted-foreground mt-4">
+              <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground mt-3 md:mt-4`}>
                 <p>Use admin@gonetwork.ai / admin para demonstração</p>
               </div>
             </form>

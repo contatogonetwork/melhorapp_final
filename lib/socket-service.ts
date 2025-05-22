@@ -53,41 +53,160 @@ export interface CollaborationState {
   isPlaying?: boolean
 }
 
+/**
+ * Serviço Singleton para gerenciar conexões Socket.io
+ * Implementa padrão Singleton para garantir apenas uma instância do socket em toda a aplicação
+ */
 class SocketService {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null
   private connected = false
+  private connectionInProgress = false
+  private connectionAttempts = 0
+  private maxReconnectAttempts = 5
+  private authToken: string | null = null
+
+  // Definir token de autenticação
+  setAuthToken(token: string) {
+    this.authToken = token;
+    return this;
+  }
 
   // Inicializar a conexão com o servidor Socket.IO
-  connect(serverUrl: string = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001") {
-    if (this.connected) return
+  connect(serverUrl: string = process.env.NEXT_PUBLIC_SOCKET_URL || "/socket.io") {
+    if (this.connected) return this.socket
+    if (this.connectionInProgress) {
+      console.log("[Socket.io] Conexão já em andamento, aguardando...");
+      return this.socket;
+    }
 
+    this.connectionInProgress = true;
+    
+    // Determina a URL correta para conexão
+    // Se não começa com http ou https, assume que é um caminho relativo
+    // e usa o proxy configurado no next.config.mjs
+    const isRelativePath = !serverUrl.startsWith("http");
+    
+    // Configuração do Socket.io para lidar com CORS
     this.socket = io(serverUrl, {
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: 1000,
-    })
+      // Só definimos path quando usamos um caminho relativo (proxy)
+      path: isRelativePath ? '/socket.io' : undefined,
+      transports: ['websocket', 'polling'],
+      timeout: 15000,
+      auth: this.authToken ? { token: this.authToken } : undefined
+    });
 
+    // Logs de conexão
     this.socket.on("connect", () => {
-      console.log("Conectado ao servidor de colaboração")
-      this.connected = true
-    })
+      console.log("[Socket.io] Conectado ao servidor de colaboração");
+      this.connected = true;
+      this.connectionInProgress = false;
+      this.connectionAttempts = 0;
+      
+      // Se temos token de autenticação, autenticamos após a conexão
+      if (this.authToken) {
+        this.authenticate();
+      }
+    });
 
-    this.socket.on("disconnect", () => {
-      console.log("Desconectado do servidor de colaboração")
-      this.connected = false
-    })
+    // Importante: Log detalhado de erros de conexão
+    this.socket.on("connect_error", (error) => {
+      this.connectionAttempts++;
+      
+      console.error(`[Socket.io] Erro de conexão (tentativa ${this.connectionAttempts}/${this.maxReconnectAttempts}):`, error.message);
+      
+      if (error.message.includes("CORS") || error.message.includes("cors")) {
+        console.error("[Socket.io] Erro de CORS detectado. Verifique:");
+        console.error("1. O servidor Socket.io tem CORS configurado corretamente?");
+        console.error("2. O proxy no next.config.mjs está configurado corretamente?");
+        console.error("3. Tente usar a conexão direta em produção com NEXT_PUBLIC_SOCKET_URL");
+      }
+      
+      if (this.connectionAttempts >= this.maxReconnectAttempts) {
+        console.error("[Socket.io] Número máximo de tentativas excedido. Desistindo...");
+        this.connectionInProgress = false;
+      }
+    });
 
-    return this.socket
+    // Log de desconexão
+    this.socket.on("disconnect", (reason) => {
+      console.log("[Socket.io] Desconectado do servidor:", reason);
+      this.connected = false;
+      
+      // Se for desconexão por erro, tentamos reconectar
+      if (reason === "io server disconnect") {
+        // Desconexão foi iniciada pelo servidor, precisamos reconectar manualmente
+        console.log("[Socket.io] Tentando reconectar manualmente...");
+        this.socket?.connect();
+      }
+      // Se for qualquer outro motivo, o socket tentará reconectar automaticamente
+    });
+
+    // Monitor de eventos para depuração em modo de desenvolvimento
+    if (process.env.NODE_ENV === "development") {
+      this.socket.onAny((event, ...args) => {
+        console.log(`[Socket.io] [DEV] Evento recebido: ${event}`, args);
+      });
+    }
+
+    return this.socket;
   }
 
   // Desconectar do servidor
   disconnect() {
     if (this.socket) {
-      this.socket.disconnect()
-      this.socket = null
-      this.connected = false
+      this.socket.disconnect();
+      this.socket = null;
+      this.connected = false;
+      this.connectionInProgress = false;
+      this.connectionAttempts = 0;
     }
+  }
+
+  // Autenticar o usuário após a conexão
+  private authenticate() {
+    if (!this.socket || !this.authToken) return;
+    
+    const [sessionId, userId] = this.parseToken(this.authToken);
+    
+    if (!sessionId || !userId) {
+      console.error("[Socket.io] Token de autenticação inválido");
+      return;
+    }
+    
+    this.socket.emit('authenticate', {
+      sessionId,
+      userId,
+      token: this.authToken
+    }, (response: any) => {
+      if (response && response.success) {
+        console.log("[Socket.io] Autenticação bem-sucedida");
+      } else {
+        console.error("[Socket.io] Erro de autenticação:", response?.error || "Desconhecido");
+      }
+    });
+  }
+  
+  // Analisar token (formato simplificado para exemplo)
+  private parseToken(token: string): [string, string] {
+    try {
+      // Formato de exemplo: "session:user:signature"
+      const parts = token.split(':');
+      if (parts.length >= 2) {
+        return [parts[0], parts[1]];
+      }
+    } catch (e) {
+      console.error("[Socket.io] Erro ao analisar token", e);
+    }
+    return ["", ""];
+  }
+
+  // Verificar status da conexão
+  isConnected(): boolean {
+    return this.connected && !!this.socket?.connected;
   }
 
   // Entrar em uma sessão de colaboração
@@ -185,5 +304,6 @@ class SocketService {
   }
 }
 
-// Exportar uma instância singleton
-export const socketService = new SocketService()
+// Exportar a classe como default e uma instância singleton como export nomeado
+export const socketService = new SocketService();
+export default SocketService;

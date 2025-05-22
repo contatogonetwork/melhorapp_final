@@ -2,7 +2,9 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react"
-import { socketService, type CollaborationUser } from "@/lib/socket-service"
+import { socketService as defaultSocketService, type CollaborationUser } from "@/lib/socket-service"
+import SocketService from "@/lib/socket-service"
+import useSocket from "@/hooks/use-socket"
 import type { Comment } from "@/components/video/comment-markers-timeline"
 import type { Annotation } from "@/components/video/annotation-canvas"
 import { v4 as uuidv4 } from "uuid"
@@ -31,6 +33,7 @@ interface CollaborationContextType {
   updateCursorPosition: (position: { x: number; y: number }) => void
   seekVideo: (time: number) => void
   playPauseVideo: (isPlaying: boolean) => void
+  connectionError: Error | null
 }
 
 const CollaborationContext = createContext<CollaborationContextType | undefined>(undefined)
@@ -58,32 +61,43 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [activeAnnotators, setActiveAnnotators] = useState<Record<string, Annotation>>({})
   const [comments, setComments] = useState<Comment[]>([])
   const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [connectionError, setConnectionError] = useState<Error | null>(null)
 
   const cursorUpdateThrottleRef = useRef<NodeJS.Timeout | null>(null)
 
   // Inicializar a conexão com o servidor Socket.IO
   useEffect(() => {
-    const socket = socketService.connect()
-    if (!socket) return
+    const socketService = new SocketService();
+    const socket = socketService.connect();
+    if (!socket) return;
 
     socket.on("connect", () => {
-      setIsConnected(true)
-    })
+      setIsConnected(true);
+    });
 
     socket.on("disconnect", () => {
-      setIsConnected(false)
-      setIsJoined(false)
-    })
+      setIsConnected(false);
+      setIsJoined(false);
+    });
+
+    socket.on("connect_error", (error) => {
+      setConnectionError(error);
+    });
+
+    socket.on("reconnect_attempt", () => {
+      setConnectionError(null);
+    });
 
     return () => {
-      socketService.disconnect()
-    }
+      socketService.disconnect();
+    };
   }, [])
 
   // Configurar os listeners de eventos quando conectado
   useEffect(() => {
     if (!isConnected) return
 
+    const socketService = new SocketService();
     const socket = socketService.getSocket()
     if (!socket) return
 
@@ -182,7 +196,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     })
 
     // Solicitar o estado inicial ao conectar
-    socketService.requestInitialState()
+    SocketService.requestInitialState()
 
     return () => {
       socket.off("userJoined")
@@ -221,7 +235,11 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setCurrentUser(user)
       setSessionId(sessionId)
+      
+      // Usar a instância de SocketService
+      const socketService = new SocketService()
       socketService.joinSession(sessionId, user)
+      
       setIsJoined(true)
     },
     [isConnected],
@@ -231,7 +249,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
   const leaveSession = useCallback(() => {
     if (!isConnected || !isJoined) return
 
-    socketService.leaveSession()
+    SocketService.leaveSession()
     setIsJoined(false)
     setSessionId(null)
     setCurrentUser(null)
@@ -248,7 +266,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (comment: Comment) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.addComment(comment)
+      SocketService.addComment(comment)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -258,7 +276,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (comment: Comment) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.updateComment(comment)
+      SocketService.updateComment(comment)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -268,7 +286,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (commentId: string) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.deleteComment(commentId)
+      SocketService.deleteComment(commentId)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -278,7 +296,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (annotation: Annotation) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.startAnnotation(annotation)
+      SocketService.startAnnotation(annotation)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -288,7 +306,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (annotation: Annotation) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.updateAnnotation(annotation)
+      SocketService.updateAnnotation(annotation)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -298,7 +316,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (annotation: Annotation) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.completeAnnotation(annotation)
+      SocketService.completeAnnotation(annotation)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -308,7 +326,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (annotationId: string) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.deleteAnnotation(annotationId)
+      SocketService.deleteAnnotation(annotationId)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -318,7 +336,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (isTyping: boolean) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.setTyping(isTyping)
+      SocketService.setTyping(isTyping)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -333,7 +351,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       cursorUpdateThrottleRef.current = setTimeout(() => {
-        socketService.moveCursor(position)
+        SocketService.moveCursor(position)
         cursorUpdateThrottleRef.current = null
       }, 50) // Limitar a 20 atualizações por segundo
     },
@@ -345,7 +363,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (time: number) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.seekVideo(time)
+      SocketService.seekVideo(time)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -355,7 +373,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     (isPlaying: boolean) => {
       if (!isConnected || !isJoined || !currentUser) return
 
-      socketService.playPauseVideo(isPlaying)
+      SocketService.playPauseVideo(isPlaying)
     },
     [isConnected, isJoined, currentUser],
   )
@@ -384,6 +402,7 @@ export const CollaborationProvider: React.FC<{ children: React.ReactNode }> = ({
     updateCursorPosition,
     seekVideo,
     playPauseVideo,
+    connectionError,
   }
 
   return <CollaborationContext.Provider value={value}>{children}</CollaborationContext.Provider>

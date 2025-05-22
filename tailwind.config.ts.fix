@@ -1,20 +1,5 @@
+import { draculaTheme } from 'tailwind-dracula';
 import type { Config } from 'tailwindcss';
-
-// Define manualmente as cores do tema Dracula
-const draculaColors = {
-  'dracula-background': '#282a36',
-  'dracula-current-line': '#44475a',
-  'dracula-selection': '#44475a',
-  'dracula-foreground': '#f8f8f2',
-  'dracula-comment': '#6272a4',
-  'dracula-cyan': '#8be9fd',
-  'dracula-green': '#50fa7b',
-  'dracula-orange': '#ffb86c',
-  'dracula-pink': '#ff79c6',
-  'dracula-purple': '#bd93f9',
-  'dracula-red': '#ff5555',
-  'dracula-yellow': '#f1fa8c',
-};
 
 const config: Config = {
   darkMode: ["class"],
@@ -38,9 +23,10 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-fira-code)', 'monospace'],
-      },      // Integração do tema Dracula
+      },
+      // Integração do tema Dracula
       colors: {
-        ...draculaColors,
+        ...draculaTheme.colors,
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

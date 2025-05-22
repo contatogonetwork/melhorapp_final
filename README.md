@@ -11,10 +11,11 @@ Este projeto é uma aplicação web para gerenciar entregas audiovisuais em even
 - **Zustand** (gerenciamento de estado)
 - **React Query** (gerenciamento de dados e cache)
 - **React Hook Form + Zod** (formulários com validação)
+- **Socket.io** (comunicação em tempo real)
 
 ## Estrutura do Projeto
 
-```
+```plaintext
 melhorapp/
 ├── app/                  # Next.js App Router
 │   ├── globals.css       # Estilos globais
@@ -37,6 +38,38 @@ melhorapp/
 └── types/                # Definições de tipos TypeScript
 ```
 
+## Configuração do Socket.io e CORS
+
+Para resolver problemas de CORS ao conectar com o servidor Socket.io, o projeto utiliza um proxy configurado no Next.js:
+
+### Desenvolvimento
+
+- O servidor Socket.io deve estar rodando em `http://localhost:3001`
+- O front-end se conecta usando o caminho relativo `/socket.io`, que é redirecionado pelo proxy
+- Não é necessário configurar CORS no servidor para desenvolvimento local
+
+### Produção
+
+- Configure a variável de ambiente `NEXT_PUBLIC_SOCKET_URL` apontando para o servidor Socket.io
+- O servidor Socket.io deve ter CORS configurado para aceitar o domínio do front-end
+- Exemplo de configuração de CORS no servidor:
+
+```javascript
+const io = new Server({
+  cors: {
+    origin: "https://seu-dominio-frontend.com",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+```
+
+### Variáveis de Ambiente
+
+- Copie `.env.local.example` para `.env.local` e configure conforme necessário
+- Para desenvolvimento, não defina `NEXT_PUBLIC_SOCKET_URL` para usar o proxy
+- Para produção, defina `NEXT_PUBLIC_SOCKET_URL` com a URL completa do servidor Socket.io
+
 ## Fluxo de Trabalho Principal
 
 1. **Autenticação**: Login/registro de editores e clientes
@@ -49,7 +82,7 @@ melhorapp/
 ## Funcionalidades Principais
 
 - **Player de vídeo** com anotações e comentários contextuais
-- **Colaboração em tempo real** entre editores e clientes
+- **Colaboração em tempo real** usando Socket.io
 - **Anotações visuais** diretamente no vídeo
 - **Comentários com timestamp** vinculados a momentos específicos do vídeo
 - **Sistema de status** para acompanhamento de projetos

@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "socket-server": "node scripts/socket-server-teste.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run socket-server\"",
+    "check-socket": "node scripts/check-socket-connection.js",
+    "check-socket:prod": "node scripts/check-socket-connection.js $NEXT_PUBLIC_SOCKET_URL"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -38,12 +42,12 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@tanstack/react-query": "^5.76.1",
-    "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "8.5.1",
+    "framer-motion": "^12.12.1",
     "input-otp": "1.4.1",
     "jspdf": "latest",
     "jspdf-autotable": "latest",
@@ -69,7 +73,13 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "postcss": "^8",
+    "autoprefixer": "^10.4.21",
+    "colors": "^1.4.0",
+    "concurrently": "^9.1.2",
+    "http": "^0.0.1-security",
+    "postcss": "^8.5.3",
+    "socket.io": "^4.8.1",
+    "tailwind-dracula": "^1.1.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }

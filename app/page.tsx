@@ -5,6 +5,7 @@ import SplashScreen from "@/components/splash-screen"
 import MainWindow from "@/components/main-window"
 import LoginWidget from "@/components/login-widget"
 import { useAuthStore } from "@/store/useAuthStore"
+import { useMobile } from "@/hooks/use-mobile"
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true)
@@ -12,6 +13,7 @@ export default function Home() {
   const user = useAuthStore((state) => state.user)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
+  const isMobile = useMobile()
   
   // Não vamos chamar useDevice() diretamente aqui para evitar loops
   
@@ -42,7 +44,23 @@ export default function Home() {
       {isAuthenticated && user ? (
         <MainWindow currentUser={user} onLogout={handleLogout} />
       ) : (
-        <LoginWidget onLoginSuccess={handleLogin} />
+        <>
+          <LoginWidget onLoginSuccess={handleLogin} />
+          <div className={`fixed ${isMobile ? 'bottom-4 left-4 right-4 flex justify-between' : 'bottom-4 right-4 flex gap-2'}`}>
+            <a 
+              href="/tema" 
+              className={`text-xs bg-dracula-purple hover:bg-dracula-purple/90 text-white ${isMobile ? 'flex-1 mr-2 text-center' : 'px-4 py-2'} rounded-md transition-all shadow-dracula`}
+            >
+              Demo do Tema
+            </a>
+            <a 
+              href="/exemplo" 
+              className={`text-xs bg-dracula-cyan hover:bg-dracula-cyan/90 text-black ${isMobile ? 'flex-1 text-center' : 'px-4 py-2'} rounded-md transition-all shadow-dracula`}
+            >
+              Exemplo
+            </a>
+          </div>
+        </>
       )}
     </main>
   )

@@ -150,12 +150,24 @@ export default function GeneralInfoTab({ eventId }: GeneralInfoTabProps) {
   
   // Estado para controlar a permissão de edição
   const [canEdit, setCanEdit] = useState(false);
-  
-  // Valores padrão para o formulário
+    // Valores padrão para o formulário - garantindo que todos os campos têm valores iniciais
   const defaultValues: Partial<GeneralInfoFormValues> = {
+    eventDate: "",
+    startTime: "",
+    endTime: "",
+    eventLocation: "",
     hasCredentialing: "não",
+    accessLocation: "",
+    credentialingStart: "",
+    credentialingEnd: "",
+    credentialingResponsible: "",
+    eventAccessLocation: "",
     hasMediaRoom: "não",
+    mediaRoomLocation: "",
     hasInternet: "não",
+    internetLogin: "",
+    internetPassword: "",
+    generalInfo: "",
   };
   
   // Inicialização do formulário com react-hook-form
@@ -180,10 +192,12 @@ export default function GeneralInfoTab({ eventId }: GeneralInfoTabProps) {
         const eventResponse = await fetch(`/api/events/${eventId}`);
         if (eventResponse.ok) {
           const eventData = await eventResponse.json();
-          
-          // Preencher o formulário com os dados do evento
+            // Preencher o formulário com os dados do evento, garantindo valores seguros
           form.setValue("eventDate", eventData.date || "");
           // Preencher outros campos do evento se disponíveis
+          if (eventData.startTime) form.setValue("startTime", eventData.startTime);
+          if (eventData.endTime) form.setValue("endTime", eventData.endTime);
+          if (eventData.location) form.setValue("eventLocation", eventData.location);
         }
         
         // Buscar membros da equipe
@@ -215,11 +229,12 @@ export default function GeneralInfoTab({ eventId }: GeneralInfoTabProps) {
         try {
           // Usar o serviço para buscar os dados
           const briefingData = await getBriefing(eventId as string);
-          
-          // Preencher o formulário com os dados existentes
+            // Preencher o formulário com os dados existentes, garantindo valores seguros
           Object.keys(briefingData).forEach((key) => {
             // @ts-ignore - keys dinâmicas
-            form.setValue(key, briefingData[key]);
+            const value = briefingData[key] === undefined ? "" : briefingData[key];
+            // @ts-ignore - keys dinâmicas
+            form.setValue(key, value);
           });
         } catch (err) {
           // Se o briefing ainda não existe, isso é normal para novos eventos
