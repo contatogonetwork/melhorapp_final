@@ -13,9 +13,26 @@ const { io } = require("socket.io-client");
 const colors = require('colors/safe');
 
 // Pega a URL do servidor como argumento de linha de comando, ou usa o padrão
-const serverUrl = process.argv[2] || process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
+let serverUrl = process.argv[2] || process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001";
 
-console.log(colors.cyan(`Verificando conexão Socket.io com: ${serverUrl}`));
+// Verifica se a URL é válida
+try {
+  // Adiciona protocolo se não estiver presente
+  if (!serverUrl.startsWith('http://') && !serverUrl.startsWith('https://') && !serverUrl.startsWith('/')) {
+    serverUrl = 'http://' + serverUrl;
+  }
+  
+  // Verifica se é um URL relativo ou absoluta
+  if (!serverUrl.startsWith('/')) {
+    new URL(serverUrl);
+  }
+  
+  console.log(colors.cyan(`Verificando conexão Socket.io com: ${serverUrl}`));
+} catch (error) {
+  console.error(colors.red(`URL inválida: ${serverUrl}`));
+  console.error(colors.gray('Formato correto: http://hostname:port ou /socket.io'));
+  process.exit(1);
+}
 
 // Configura o socket com opções similares às usadas na aplicação
 const socket = io(serverUrl, {
@@ -31,17 +48,23 @@ const socket = io(serverUrl, {
 socket.on("connect", () => {
   console.log(colors.green.bold("✓ Conexão estabelecida com sucesso"));
   console.log(colors.gray(`  ID da conexão: ${socket.id}`));
-  
-  // Tenta fazer um ping simples
+    // Tenta fazer um ping simples
   console.log(colors.yellow("Enviando mensagem de teste..."));
   
   // Envia um evento de ping (o servidor precisará estar configurado para responder)
   socket.emit("ping", { timestamp: Date.now() }, (response) => {
-    if (response && response.success) {
-      console.log(colors.green("✓ Resposta recebida do servidor"));
-      console.log(colors.gray(`  Latência: ${Date.now() - response.timestamp}ms`));
-    } else {
-      console.log(colors.red("✗ Sem resposta do servidor para o ping"));
+    try {
+      if (response && (response.success === true || (typeof response === 'object' && Object.keys(response).length > 0))) {
+        console.log(colors.green("✓ Resposta recebida do servidor"));
+        const timestamp = response.timestamp || Date.now();
+        console.log(colors.gray(`  Latência: ${Date.now() - timestamp}ms`));
+      } else {
+        console.log(colors.red("✗ Resposta inválida do servidor para o ping"));
+        console.log(colors.gray(`  Resposta recebida: ${JSON.stringify(response)}`));
+      }
+    } catch (err) {
+      console.log(colors.red("✗ Erro ao processar resposta do servidor"));
+      console.log(colors.gray(`  Erro: ${err.message}`));
     }
     
     // Encerra após teste concluído

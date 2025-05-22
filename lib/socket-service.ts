@@ -297,11 +297,6 @@ class SocketService {
   getSocket() {
     return this.socket
   }
-
-  // Verificar se está conectado
-  isConnected() {
-    return this.connected
-  }
 }
 
 // Exportar a classe como default e uma instância singleton como export nomeado

@@ -10,7 +10,9 @@
     "socket-server": "node scripts/socket-server-teste.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run socket-server\"",
     "check-socket": "node scripts/check-socket-connection.js",
-    "check-socket:prod": "node scripts/check-socket-connection.js $NEXT_PUBLIC_SOCKET_URL"
+    "check-socket:prod": "node scripts/check-socket-connection.js %NEXT_PUBLIC_SOCKET_URL%",
+    "start:all": "concurrently \"npm run start\" \"npm run socket-server\"",
+    "build:all": "npm run build && echo Build concluído!"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -76,6 +78,7 @@
     "autoprefixer": "^10.4.21",
     "colors": "^1.4.0",
     "concurrently": "^9.1.2",
+    "dotenv": "^16.5.0",
     "http": "^0.0.1-security",
     "postcss": "^8.5.3",
     "socket.io": "^4.8.1",

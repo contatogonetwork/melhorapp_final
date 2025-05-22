@@ -46,23 +46,24 @@ Para resolver problemas de CORS ao conectar com o servidor Socket.io, o projeto 
 
 - O servidor Socket.io deve estar rodando em `http://localhost:3001`
 - O front-end se conecta usando o caminho relativo `/socket.io`, que é redirecionado pelo proxy
-- Não é necessário configurar CORS no servidor para desenvolvimento local
+- Execute o servidor de teste com `npm run socket-server`
+- Inicie ambos (front-end e servidor Socket.io) com `npm run dev:all`
 
 ### Produção
 
 - Configure a variável de ambiente `NEXT_PUBLIC_SOCKET_URL` apontando para o servidor Socket.io
-- O servidor Socket.io deve ter CORS configurado para aceitar o domínio do front-end
-- Exemplo de configuração de CORS no servidor:
+- O front-end se conectará diretamente a esta URL
+- Configure CORS no servidor para permitir conexões do domínio do front-end
 
-```javascript
-const io = new Server({
-  cors: {
-    origin: "https://seu-dominio-frontend.com",
-    methods: ["GET", "POST"],
-    credentials: true
-  }
-});
-```
+### Diagnóstico de Conexão
+
+- Acesse a página de diagnóstico em `/admin/diagnosticos` para verificar o status da conexão
+- Utilize o script de diagnóstico com `npm run check-socket` para testes em desenvolvimento
+- Para testar em produção, use `npm run check-socket:prod`
+
+Documentação detalhada sobre a configuração do Socket.io está disponível em:
+- `/docs/socket-io-cors.md` - Solução de problemas de CORS
+- `/docs/socket-io-melhorias.md` - Resumo das implementações de segurança e robustez
 
 ### Variáveis de Ambiente
 

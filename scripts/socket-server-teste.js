@@ -2,6 +2,21 @@
 const { Server } = require('socket.io');
 const http = require('http');
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
+
+// Tenta carregar variáveis de ambiente do arquivo .env se existir
+try {
+  const envPath = path.resolve(process.cwd(), '.env.local');
+  if (fs.existsSync(envPath)) {
+    console.log('Carregando variáveis de ambiente de .env.local');
+    require('dotenv').config({ path: envPath });
+  } else {
+    console.log('Arquivo .env.local não encontrado. Usando valores padrão.');
+  }
+} catch (error) {
+  console.log('Erro ao carregar variáveis de ambiente:', error.message);
+}
 
 // Criando um servidor HTTP básico
 const httpServer = http.createServer();
@@ -24,7 +39,7 @@ const verifyToken = (token, sessionId, userId) => {
 const io = new Server(httpServer, {
   cors: {
     // Permitir conexões do frontend Next.js em desenvolvimento
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.SOCKET_CORS_ORIGIN || "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -118,11 +133,17 @@ io.on('connection', (socket) => {
 
 // Porta para o servidor Socket.io (3001 por padrão)
 const PORT = process.env.SOCKET_PORT || 3001;
+const CORS_ORIGIN = process.env.SOCKET_CORS_ORIGIN || "http://localhost:3000";
 
 // Iniciar o servidor
 httpServer.listen(PORT, () => {
-  console.log(`Servidor Socket.io de teste rodando na porta ${PORT}`);
-  console.log(`Configure seu cliente para conectar em http://localhost:${PORT}`);
-  console.log('CORS está configurado para permitir conexões de http://localhost:3000');
-  console.log('Pressione CTRL+C para encerrar o servidor');
+  console.log(`\n=== Servidor Socket.io de Teste ===`);
+  console.log(`Servidor rodando na porta: ${PORT}`);
+  console.log(`URL de conexão: http://localhost:${PORT}`);
+  console.log(`CORS configurado para origem: ${CORS_ORIGIN}`);
+  console.log(`Secret para tokens: ${process.env.SOCKET_SECRET ? '[Configurado]' : '[Usando padrão]'}`);
+  console.log(`\nPara diagnóstico da conexão:`);
+  console.log(`- Execute: npm run check-socket`);
+  console.log(`- Acesse a página de diagnóstico: http://localhost:3000/admin/diagnosticos`);
+  console.log(`\nPressione CTRL+C para encerrar o servidor\n`);
 });
